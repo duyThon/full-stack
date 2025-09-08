@@ -19,8 +19,14 @@ let postCURD = async (req, res) => {
     return res.redirect('/');
 };
 
+let displayGetCURD = async (req, res) => {
+    let data = await CRUDService.getAllUser();
+    return res.render('displayCRUD.ejs', {data: data});
+};
+
 module.exports = {
     getHomePage: getHomePage,
     getCURD: getCURD,
-    postCURD: postCURD
+    postCURD: postCURD,
+    displayGetCURD: displayGetCURD
 };
