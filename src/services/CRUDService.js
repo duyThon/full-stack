@@ -16,7 +16,6 @@ let getAllUser = () => {
 
 let createNewUser = async (data) => {
   return new Promise(async (resolve, reject) => {
-    console.log(data);
     try {
       let hashPasswordFromBcrypt = await hashUserPassword(data.password);
       await db.User.create({
