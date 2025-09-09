@@ -24,9 +24,21 @@ let displayGetCURD = async (req, res) => {
     return res.render('displayCRUD.ejs', {data: data});
 };
 
+let getEditCURD = async (req, res) => {
+    let userId = req.query.id;
+    let user = await CRUDService.getUserInfo(userId);
+};
+
+let putEditCURD = async (req, res) => {
+    let data = req.body;
+    await CRUDService.updateUser(data);
+};
+
 module.exports = {
     getHomePage: getHomePage,
     getCURD: getCURD,
     postCURD: postCURD,
-    displayGetCURD: displayGetCURD
+    displayGetCURD: displayGetCURD,
+    getEditCURD: getEditCURD,
+    putEditCURD: putEditCURD
 };
