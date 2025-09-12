@@ -10,7 +10,7 @@ import passIcon from '../../src/assets/images/pass.svg';
 import './Login.scss';
 import { FormattedMessage } from 'react-intl';
 
-import adminService from '../services/adminService';
+import {handleLogin} from '../services/userService';
 
 class Login extends Component {
     constructor(props) {
@@ -25,7 +25,7 @@ class Login extends Component {
     initialState = {
         username: '',
         password: '',
-        loginError: ''
+        errMessage: ''
     }
 
     state = {
@@ -52,31 +52,22 @@ class Login extends Component {
         navigate(`${redirectPath}`);
     }
 
-    processLogin = () => {
+    processLogin = async () => {
+        this.setState(errMessage => '')
         const { username, password } = this.state;
-
-        const { adminLoginSuccess, adminLoginFail } = this.props;
-        let loginBody = {
-            username: username,
-            password: password
-        }
-        //sucess
-        let adminInfo = {
-            "tlid": "0",
-            "tlfullname": "Administrator",
-            "custype": "A",
-            "accessToken": "eyJhbGciOiJIU"
-        }
-
-        adminLoginSuccess(adminInfo);
-        this.refresh();
-        this.redirectToSystemPage();
         try {
-            adminService.login(loginBody)
-        } catch (e) {
-            console.log('error login : ', e)
+            const res = await handleLogin({email: username, password});
+            console.log('res: ', res);
+            if(res.errCode !== 0) {
+                this.setState({
+                    errMessage: res.errMessage
+                })
+            } else {
+                this.props.userLogionSuccess(res.user)
+            }
+        } catch (error) {
+            console.log('error: ', error);
         }
-
     }
 
     handlerKeyDown = (event) => {
@@ -101,7 +92,7 @@ class Login extends Component {
     }
 
     render() {
-        const { username, password, loginError } = this.state;
+        const { username, password, errMessage } = this.state;
         const { lang } = this.props;
 
         return (
@@ -137,9 +128,9 @@ class Login extends Component {
                             />
                         </div>
 
-                        {loginError !== '' && (
+                        {errMessage !== '' && (
                             <div className='login-error'>
-                                <span className='login-error-message'>{loginError}</span>
+                                <span className='login-error-message'>{errMessage}</span>
                             </div>
                         )}
 
@@ -169,8 +160,7 @@ const mapStateToProps = state => {
 const mapDispatchToProps = dispatch => {
     return {
         navigate: (path) => dispatch(push(path)),
-        adminLoginSuccess: (adminInfo) => dispatch(actions.adminLoginSuccess(adminInfo)),
-        adminLoginFail: () => dispatch(actions.adminLoginFail()),
+        userLogionSuccess: (userInfo) => dispatch(actions.userLogionSuccess(userInfo))
     };
 };
 
