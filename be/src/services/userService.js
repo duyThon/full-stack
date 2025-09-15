@@ -2,6 +2,8 @@ import { raw } from "body-parser";
 import db from "../models/index";
 import bcrypt from "bcryptjs";
 
+const salt = bcrypt.genSaltSync(10);
+
 let handleUserLogin = (email, password) => {
   return new Promise(async (resolve, reject) => {
     try {
@@ -81,8 +83,94 @@ let getAllUser = async (id) => {
   }
 }
 
+let createNewUser = async (data) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      let check = await checkUserEmail(data.email);
+      if (check) {
+        resolve({
+          errCode: 2,
+          errMessage: "Email already exists",
+        });
+      }
+      let hashPasswordFromBcrypt = await hashUserPassword(data.password);
+      await db.User.create({
+        ...data,
+        password: hashPasswordFromBcrypt,
+        gender: data.gender === "1" ? true : false,
+      });
+      resolve({
+        errCode: 0,
+        errMessage: "OK", 
+      });
+    } catch (e) {
+      reject(e);
+    }
+  });
+};
+
+let updateUser = (data) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      let user = await db.User.findOne({
+        where: { id: data.id },
+        raw: false,
+      });
+      if (user) {
+        user.firstName = data.firstName;
+        user.lastName = data.lastName;
+        user.address = data.address;
+        await user.save();
+        resolve({
+          errCode: 0,
+          errMessage: "OK",
+        });
+      } else {
+        resolve({
+          errCode: 2,
+          errMessage: "The user isn't exist",
+        });
+      }
+    } catch (e) {
+      reject(e);
+    }
+  });
+};
+
+let deleteUser = async (userId) => {
+  try {
+    if (!userId) {
+      return {
+        errCode: 2,
+        errMessage: "The user isn't exist",
+      };
+    }
+    await db.User.destroy({ where: { id: userId } });
+    const allUsers = await db.User.findAll();
+    return allUsers;
+
+  } catch (e) {
+    throw e;
+  }
+};
+
+
+let hashUserPassword = (password) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      let hashPassword = bcrypt.hashSync(password, salt);
+      resolve(hashPassword);
+    } catch (e) {
+      reject(e);
+    }
+  });
+};
+
 module.exports = {
   handleUserLogin: handleUserLogin,
   checkUserEmail: checkUserEmail,
-  getAllUser: getAllUser
+  getAllUser: getAllUser,
+  createNewUser: createNewUser,
+  updateUser: updateUser,
+  deleteUser: deleteUser
 };
